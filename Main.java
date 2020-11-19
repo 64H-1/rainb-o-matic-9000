@@ -51,10 +51,10 @@ class Main {
             System.out.println("\n" + s2 + " : " + toHexString(getSHA(s2)));
 
             myRainbow.generateTable();
-            System.out.println("searching table for:" + hashString + " and the resulting key:");
+            System.out.println("searching table for:" + hashString );
             System.out.println(myRainbow.searchTable(hashString));
-            System.out.println("-------------");
-            System.out.println(myRainbow.steppingBackwards(16, "f"));
+            System.out.println(myRainbow.searchTable(toHexString(getSHA("dff2"))));
+
         }
         // For specifying wrong message digest algorithms
         catch (NoSuchAlgorithmException e) {

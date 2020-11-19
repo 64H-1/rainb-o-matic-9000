@@ -16,15 +16,15 @@ public class Rainbow {
     private HashMap<String, String> rainbowTable = new HashMap<String, String>(); //central data structure
 
     private Integer keyLength = 4;
-    private Integer totalRounds = 16; // hash + reduction rounds.
+    private Integer rounds = 1; // number of rows in the table ( = hash + reduction rounds + 1)
     private Integer rows = 16; //number of starting keys generated for the table; ie. rows
 
     public void generateTable() throws NoSuchAlgorithmException {
         for (int i = 0; i < rows; i++) {
             String firstKey = Integer.toHexString(i); //generate first key
-            System.out.print("Row Nr." +i+": 1 = " + firstKey);
+            System.out.print("Row Nr." +i+": start = " + firstKey);
             String lastKey = firstKey;
-            for (int j = 0; j < totalRounds; j++) {
+            for (int j = 0; j < rounds; j++) {
                 lastKey = rainbowStep(j, lastKey); // Move one Step along the rainbow, to the next key.
                 System.out.print(" ,"+ j + "=" + lastKey);
             }
@@ -84,17 +84,18 @@ public class Rainbow {
         String preimage = "FAILURE: Preimage not found."; //initiating the key, and preparing for failure. Overwritten upon success.
 
 
-        for (int i = 0; i < totalRounds; i++) {
-            String soughtKey = reductionFunction(totalRounds-i, soughtHash); //ith Hypothesis key
+        for (int i = 0; i < rounds; i++) {
+            String soughtKey = reductionFunction(rounds -i, soughtHash); //ith Hypothesis key
             // assuming this was the key in round (totalRounds-i), what would the final key in the rainbow table be?
-            String hypotheticalFinalKey = rainbowLeap(totalRounds-i, totalRounds, soughtKey);
+            String hypotheticalFinalKey = rainbowLeap(rounds -i, rounds, soughtKey);
 
+            System.out.println("i = " +i+ ", hypotheticalFinal key = " + hypotheticalFinalKey + ", soughtKey = " + soughtKey);
             if(rainbowTable.containsKey(hypotheticalFinalKey)){ //Hypothesis key contained or not?
 
                 //match found! apply all rounds up to the previous key, to the originally generated key, to approach the solution from the front of the rainbow
                 String startingKey = rainbowTable.get(hypotheticalFinalKey); //this key is the one that originally generated the solution.
 
-                preimage = rainbowLeap(0,totalRounds-i-1,startingKey);
+                preimage = rainbowLeap(0, rounds -i-1,startingKey);
                 return preimage;
             }
             //if hypothesis key is not contained, try the next.
@@ -114,10 +115,12 @@ public class Rainbow {
 
     //steps along the rainbow, from round "begin" to round "end"
     public String rainbowLeap(Integer begin, Integer end, String inputKey) throws NoSuchAlgorithmException {
+        //System.out.println("Leaping from line " + begin +" to " + end);
         String key = inputKey;
         for (int i = begin; i < end; i++) {
             //apply all relevant rounds to the key successively
             key = rainbowStep(i,key);
+
         }
         return key;
     }
@@ -129,7 +132,7 @@ public class Rainbow {
 
         System.out.println("Stepping backwards to find " + soughtKey);
 
-        for (int j = totalRounds-i; j < totalRounds; j++) {
+        for (int j = rounds -i; j < rounds; j++) {
             resultingKey = rainbowStep(j, resultingKey);
             System.out.println("Round "+ j + ": " + resultingKey);
         }
