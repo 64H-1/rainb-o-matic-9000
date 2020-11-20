@@ -1,3 +1,4 @@
+
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
@@ -13,29 +14,30 @@ public class Rainbow {
 
     /*** Change the path ***/
     final static String outputFilePath = "~/Documents/infosec/bifroest/rainbowTable.txt";
-    private HashMap<String, String> rainbowTable = new HashMap<String, String>(); //central data structure
+    private final HashMap<String, String> rainbowTable = new HashMap<String, String>(); //central data structure
 
-    private Integer keyLength = 4;
-    private Integer rounds = 1; // number of rows in the table ( = hash + reduction rounds + 1)
-    private Integer rows = 16; //number of starting keys generated for the table; ie. rows
+    private final Integer keyLength = 4;
+    private final Integer rounds = 1; // number of rows in the table ( = hash + reduction rounds + 1)
+    private final Integer rows = 16; //number of starting keys generated for the table; ie. rows
 
     public void generateTable() throws NoSuchAlgorithmException {
         for (int i = 0; i < rows; i++) {
-            String firstKey = Integer.toHexString(i); //generate first key
-            System.out.print("Row Nr." +i+": start = " + firstKey);
+            String firstKey = leftPad(Integer.toHexString(i), keyLength); //generate first key
+
+            System.out.print("Row Nr." + i + ": start = " + firstKey);
             String lastKey = firstKey;
             for (int j = 0; j < rounds; j++) {
                 lastKey = rainbowStep(j, lastKey); // Move one Step along the rainbow, to the next key.
-                System.out.print(" ,"+ j + "=" + lastKey);
+                System.out.print(" ," + j + "=" + lastKey);
             }
-            rainbowTable.put(lastKey,firstKey); // put the fist and the last key together in the table.
+            rainbowTable.put(lastKey, firstKey); // put the fist and the last key together in the table.
             System.out.println();
-            System.out.println( "Rainbow table entry Nr. " + i+ ": " + firstKey + ", " + lastKey);
+            System.out.println("Rainbow table entry Nr. " + i + ": " + firstKey + ", " + lastKey);
         }
 
     }
 
-    public void writeTable(){
+    public void writeTable() {
 
         //key-value pairs
         rainbowTable.put("124234", "One");
@@ -45,18 +47,18 @@ public class Rainbow {
         //new file object
         File file = new File(outputFilePath);
 
-        BufferedWriter bf = null;;
+        BufferedWriter bf = null;
 
-        try{
+        try {
 
             //create new BufferedWriter for the output file
-            bf = new BufferedWriter( new FileWriter(file) );
+            bf = new BufferedWriter(new FileWriter(file));
 
             //iterate map entries
-            for(Map.Entry<String, String> entry : rainbowTable.entrySet()){
+            for (Map.Entry<String, String> entry : rainbowTable.entrySet()) {
 
                 //put key and value separated by a colon
-                bf.write( entry.getKey() + ":" + entry.getValue() );
+                bf.write(entry.getKey() + ":" + entry.getValue());
 
                 //new line
                 bf.newLine();
@@ -64,18 +66,19 @@ public class Rainbow {
 
             bf.flush();
 
-        }catch(IOException e){
+        } catch (IOException e) {
             e.printStackTrace();
-        }finally{
+        } finally {
 
-            try{
+            try {
                 //always close the writer
                 bf.close();
-            }catch(Exception e){}
+            } catch (Exception e) {
+            }
         }
     }
 
-    public void loadTable(){
+    public void loadTable() {
 
     }
 
@@ -84,18 +87,18 @@ public class Rainbow {
         String preimage = "FAILURE: Preimage not found."; //initiating the key, and preparing for failure. Overwritten upon success.
 
 
-        for (int i = 0; i < rounds; i++) {
-            String soughtKey = reductionFunction(rounds -i, soughtHash); //ith Hypothesis key
+        for (int i = 1; i < rounds; i++) { //somewhere here there is an off by one error!!
+            String soughtKey = reductionFunction(rounds - i, soughtHash); //ith Hypothesis key
             // assuming this was the key in round (totalRounds-i), what would the final key in the rainbow table be?
-            String hypotheticalFinalKey = rainbowLeap(rounds -i, rounds, soughtKey);
+            String hypotheticalFinalKey = rainbowLeap(rounds - i, rounds, soughtKey);
 
-            System.out.println("i = " +i+ ", hypotheticalFinal key = " + hypotheticalFinalKey + ", soughtKey = " + soughtKey);
-            if(rainbowTable.containsKey(hypotheticalFinalKey)){ //Hypothesis key contained or not?
+            System.out.println("i = " + i + ", hypotheticalFinal key = " + hypotheticalFinalKey + ", soughtKey = " + soughtKey);
+            if (rainbowTable.containsKey(hypotheticalFinalKey)) { //Hypothesis key contained or not?
 
                 //match found! apply all rounds up to the previous key, to the originally generated key, to approach the solution from the front of the rainbow
                 String startingKey = rainbowTable.get(hypotheticalFinalKey); //this key is the one that originally generated the solution.
 
-                preimage = rainbowLeap(0, rounds -i-1,startingKey);
+                preimage = rainbowLeap(0, rounds - i - 1, startingKey);
                 return preimage;
             }
             //if hypothesis key is not contained, try the next.
@@ -108,8 +111,8 @@ public class Rainbow {
 
     //Steps one step along the rainbow, generates the next key.
     public String rainbowStep(Integer round, String prevKey) throws NoSuchAlgorithmException {
-        String prevKeyHash = toHexString(getSHA(prevKey)); //generate hash of previous key.
-        String newKey = reductionFunction(round,prevKeyHash); // apply reduction function and get next key.
+        String prevKeyHash = hash(prevKey); //generate hash of previous key.
+        String newKey = reductionFunction(round, prevKeyHash); // apply reduction function and get next key.
         return newKey;
     }
 
@@ -119,7 +122,7 @@ public class Rainbow {
         String key = inputKey;
         for (int i = begin; i < end; i++) {
             //apply all relevant rounds to the key successively
-            key = rainbowStep(i,key);
+            key = rainbowStep(i, key);
 
         }
         return key;
@@ -132,24 +135,37 @@ public class Rainbow {
 
         System.out.println("Stepping backwards to find " + soughtKey);
 
-        for (int j = rounds -i; j < rounds; j++) {
+        for (int j = rounds - i; j < rounds; j++) {
             resultingKey = rainbowStep(j, resultingKey);
-            System.out.println("Round "+ j + ": " + resultingKey);
+            System.out.println("Round " + j + ": " + resultingKey);
         }
 
         return resultingKey;
     }
 
-    public String reductionFunction(Integer round, String prevHash){
+    public String reductionFunction(Integer round, String prevHash) {
         String shortenedHash = prevHash.substring(0, keyLength); // take first few chars of hash
         Integer sum = Integer.valueOf(shortenedHash, 16) + round; //turns Hex into Integer and adds round number
         String newKey = Integer.toHexString(sum); //convert back to hex
-        newKey = newKey.substring(0,keyLength); //avoiding overflow errors. analogous to modulus.
+        newKey = newKey.substring(0, keyLength); //avoiding overflow errors. analogous to modulus 16^keyLength.
         return newKey;
     }
 
-    public static byte[] getSHA(String input) throws NoSuchAlgorithmException
-    {
+    public String leftPad(String string, Integer len) {
+        while (string.length() < len){
+            string = "0" + string;
+        }
+        return string;
+    }
+
+    public static String hash(String input) throws NoSuchAlgorithmException {
+        return toHexString(getSHA(input));
+    }
+
+    // ::::::::::::::::::::::::::: The following two functions getSHA and toHexString are taken from ::::::::::::::::::
+    // ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+
+    public static byte[] getSHA(String input) throws NoSuchAlgorithmException {
         // Static getInstance method is called with hashing SHA
         MessageDigest md = MessageDigest.getInstance("SHA-256");
 
@@ -159,8 +175,7 @@ public class Rainbow {
         return md.digest(input.getBytes(StandardCharsets.UTF_8));
     }
 
-    public static String toHexString(byte[] hash)
-    {
+    public static String toHexString(byte[] hash) {
         // Convert byte array into signum representation
         BigInteger number = new BigInteger(1, hash);
 
@@ -168,8 +183,7 @@ public class Rainbow {
         StringBuilder hexString = new StringBuilder(number.toString(16));
 
         // Pad with leading zeros
-        while (hexString.length() < 32)
-        {
+        while (hexString.length() < 32) {
             hexString.insert(0, '0');
         }
 
