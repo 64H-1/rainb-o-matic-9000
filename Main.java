@@ -4,7 +4,7 @@ import java.security.NoSuchAlgorithmException;
 
 class Main {
     private static final Rainbow myRainbow = new Rainbow();
-    private static final String testKey = "0000";
+    private static final String testKey = "c7bc";
     private static String testHash;
 
     static {
