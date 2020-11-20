@@ -1,4 +1,4 @@
-# rainbow-o-matic-9000
+# rainb-o-matic-9000
 Don't roll your own crypto, kids.
 
 Presentation outline:
