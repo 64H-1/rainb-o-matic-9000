@@ -87,7 +87,7 @@ public class Rainbow {
         String preimage = "FAILURE: Preimage not found."; //initiating the key, and preparing for failure. Overwritten upon success.
 
 
-        for (int i = 0; i <= rounds; i++) { //somewhere here there is an off by one error!!
+        for (int i = 0; i <= rounds; i++) { //found the off-by-one error
             String soughtKey = reductionFunction(rounds - (i+1), soughtHash); //ith Hypothesis key
             // assuming this was the key in round (totalRounds-i), what would the final key in the rainbow table be?
             String hypotheticalFinalKey = rainbowLeap(rounds - i, rounds, soughtKey);
@@ -162,8 +162,8 @@ public class Rainbow {
         return toHexString(getSHA(input));
     }
 
-    // ::::::::::::::::::::::::::: The following two functions getSHA and toHexString are taken from ::::::::::::::::::
-    // ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+    // ::::::::::::::::::::::::::: The following two functions, getSHA and toHexString are adapted from ::::::::::::::::::
+    // :::::::::::::::::::::::::::::https://www.geeksforgeeks.org/sha-256-hash-in-java/:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
     public static byte[] getSHA(String input) throws NoSuchAlgorithmException {
         // Static getInstance method is called with hashing SHA
