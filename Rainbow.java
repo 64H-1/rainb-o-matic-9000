@@ -14,25 +14,28 @@ public class Rainbow {
 
     /*** Change the path ***/
     final static String outputFilePath = "~/Documents/infosec/bifroest/rainbowTable.txt";
-    private final HashMap<String, String> rainbowTable = new HashMap<String, String>(); //central data structure
+    public final HashMap<String, String> rainbowTable = new HashMap<String, String>(); //central data structure
 
-    private final Integer keyLength = 4;
-    private final Integer rounds = 16; // number of rows in the table ( = hash + reduction rounds + 1)
-    private final Integer rows = 16; //number of starting keys generated for the table; ie. rows
+    private final Integer keyLength = 4; // keyspace size = 16^keyLength = 2^4*keyLength =
+    private final Integer keySpacePow = 4*keyLength;
+    private final Integer roundsPow = 4; // 2^4 = 16
+    private final Integer rounds = (int) Math.pow(2, roundsPow) ; // number of rows in the table ( = hash + reduction rounds + 1)
+    private final Integer rowsPow = keySpacePow -roundsPow +1; // roundsPow + rowsPow = keySpacePow + 1, "+1" for good measure, so that we surely cover most of the keyspace
+    public final Integer rows = (int) Math.pow(2, rowsPow); //number of starting keys generated for the table; ie. rows
 
     public void generateTable() throws NoSuchAlgorithmException {
         for (int i = 0; i < rows; i++) {
             String firstKey = leftPadZeros(Integer.toHexString(i), keyLength); //generate first key
 
-            System.out.print("Row Nr." + i + ": start = " + firstKey);
+            //System.out.print("Row Nr." + i + ": start = " + firstKey);
             String lastKey = firstKey;
             for (int j = 0; j < rounds; j++) {
                 lastKey = rainbowStep(j, lastKey); // Move one Step along the rainbow, to the next key.
-                System.out.print(" ," + j + "=" + lastKey);
+                //System.out.print(" ," + j + "=" + lastKey);
             }
             rainbowTable.put(lastKey, firstKey); // put the fist and the last key together in the table.
-            System.out.println();
-            System.out.println("Rainbow table entry Nr. " + i + ": " + firstKey + ", " + lastKey);
+            //System.out.println();
+            //System.out.println("Rainbow table entry Nr. " + i + ": " + firstKey + ", " + lastKey);
         }
 
     }
@@ -92,14 +95,14 @@ public class Rainbow {
             // assuming this was the key in round (totalRounds-i), what would the final key in the rainbow table be?
             String hypotheticalFinalKey = rainbowLeap(rounds - i, rounds, soughtKey);
 
-            System.out.println("i = " + i + ", hypotheticalFinal key = " + hypotheticalFinalKey + ", soughtKey = " + soughtKey);
+            //System.out.println("i = " + i + ", hypotheticalFinal key = " + hypotheticalFinalKey + ", soughtKey = " + soughtKey);
             if (rainbowTable.containsKey(hypotheticalFinalKey)) { //Hypothesis key contained or not?
 
                 //match found! apply all rounds up to the previous key, to the originally generated key, to approach the solution from the front of the rainbow
                 String startingKey = rainbowTable.get(hypotheticalFinalKey); //this key is the one that originally generated the solution.
 
                 preimage = rainbowLeap(0, rounds - i - 1, startingKey);
-                return "SUCESS: Hash inverted, preimage = " + preimage;
+                return "SUCESS: Hash inverted, preimage = " + preimage + " with corresponding hash = " + hash(preimage);
             }
             //if hypothesis key is not contained, try the next.
         }
