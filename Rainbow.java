@@ -1,20 +1,16 @@
-
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
 import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
-import java.util.Map;
+import java.util.LinkedList;
+import java.util.List;
 
 public class Rainbow {
 
     /*** Change the path ***/
     final static String outputFilePath = "~/Documents/infosec/bifroest/rainbowTable.txt";
-    public final HashMap<String, String> rainbowTable = new HashMap<String, String>(); //central data structure
+    public final HashMap<String, List<String>> rainbowTable = new HashMap<String, List<String>>(); //central data structure
 
     private final Integer keyLength = 4; // keyspace size = 16^keyLength = 2^4*keyLength =
     private final Integer keySpacePow = 4*keyLength;
@@ -33,7 +29,7 @@ public class Rainbow {
                 lastKey = rainbowStep(j, lastKey); // Move one Step along the rainbow, to the next key.
                 //System.out.print(" ," + j + "=" + lastKey);
             }
-            rainbowTable.put(lastKey, firstKey); // put the fist and the last key together in the table.
+            putToMap(firstKey,lastKey); // put the fist and the last key together in the table.
             //System.out.println();
             //System.out.println("Rainbow table entry Nr. " + i + ": " + firstKey + ", " + lastKey);
         }
@@ -42,43 +38,6 @@ public class Rainbow {
 
     public void writeTable() {
 
-        //key-value pairs
-        rainbowTable.put("124234", "One");
-        rainbowTable.put("234", "Two");
-        rainbowTable.put("1242", "Three");
-
-        //new file object
-        File file = new File(outputFilePath);
-
-        BufferedWriter bf = null;
-
-        try {
-
-            //create new BufferedWriter for the output file
-            bf = new BufferedWriter(new FileWriter(file));
-
-            //iterate map entries
-            for (Map.Entry<String, String> entry : rainbowTable.entrySet()) {
-
-                //put key and value separated by a colon
-                bf.write(entry.getKey() + ":" + entry.getValue());
-
-                //new line
-                bf.newLine();
-            }
-
-            bf.flush();
-
-        } catch (IOException e) {
-            e.printStackTrace();
-        } finally {
-
-            try {
-                //always close the writer
-                bf.close();
-            } catch (Exception e) {
-            }
-        }
     }
 
     public void loadTable() {
@@ -96,12 +55,17 @@ public class Rainbow {
             if (rainbowTable.containsKey(hypotheticalFinalKey)) { //Hypothesis key contained or not?
 
                 //match found! apply all rounds up to the previous key, to the originally generated key, to approach the solution from the front of the rainbow
-                String startingKey = rainbowTable.get(hypotheticalFinalKey); //this key is the one that originally generated the solution.
+                List<String> startingKeys = rainbowTable.get(hypotheticalFinalKey); //this key is the one that originally generated the solution.
 
-                String candidatePreimage = rainbowLeap(0, rounds - i - 1, startingKey);
-                String foundHash = hash(candidatePreimage);
-                if(foundHash.equals(soughtHash)) {
-                    return "SUCESS: Hash inverted, preimage = " + candidatePreimage + ", with corresponding hash(" + candidatePreimage +") = " + foundHash;
+                //try all keys in startingKeys.
+                for (String candidateStart:startingKeys) {
+
+
+                    String candidatePreimage = rainbowLeap(0, rounds - i - 1, candidateStart);
+                    String foundHash = hash(candidatePreimage);
+                    if(foundHash.equals(soughtHash)) {
+                        return "SUCESS: Hash inverted, preimage = " + candidatePreimage + ", with corresponding hash(" + candidatePreimage +") = " + foundHash;
+                    }
                 }
                 // else: False positive, try next. May be contained deeper back in the rainbow table.
             }
@@ -112,6 +76,23 @@ public class Rainbow {
 
     //############################# Helper Functions #################################################################
     //############################# Helper Functions #################################################################
+
+
+    // add another newInitialKey to the List of all initial keys with final key = finalKey.
+    // or, if list empty, create new list, and add newInitalKey
+    public void putToMap (String newInitialKey, String finalKey) {
+        //get previously saved initial keys
+        List<String> initialKeys = rainbowTable.get(finalKey);
+
+        //if empty, create new empty list.
+        if(initialKeys==null) {
+            initialKeys = new LinkedList<String>();
+            rainbowTable.put(finalKey, initialKeys);
+        }
+
+        //add newInitialKey to list
+        initialKeys.add(newInitialKey);
+    }
 
     //Steps one step along the rainbow, generates the next key.
     public String rainbowStep(Integer round, String prevKey) throws NoSuchAlgorithmException {
