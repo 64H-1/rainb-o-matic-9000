@@ -4,7 +4,7 @@ import java.security.NoSuchAlgorithmException;
 
 class Main {
     private static final Rainbow myRainbow = new Rainbow();
-    private static final String testKey = "368e";
+    private static final String testKey = "1972";
     private static String testHash;
 
     static {
@@ -21,6 +21,7 @@ class Main {
 
             myRainbow.generateTable();
             System.out.println("searching table for: hash(" + testKey +") = " + testHash);
+            System.out.println(myRainbow.rainbowTable);
             System.out.println("Generating the table caused " + (myRainbow.rows -  myRainbow.rainbowTable.size()) + " collisions.");
             System.out.println(myRainbow.searchTable(testHash));
 

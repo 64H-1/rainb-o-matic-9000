@@ -87,9 +87,6 @@ public class Rainbow {
 
     public String searchTable(String soughtHash) throws NoSuchAlgorithmException {
 
-        String preimage = "FAILURE: Preimage not found."; //initiating the key, and preparing for failure. Overwritten upon success.
-
-
         for (int i = 0; i <= rounds; i++) { //found the off-by-one error
             String soughtKey = reductionFunction(rounds - (i+1), soughtHash); //ith Hypothesis key
             // assuming this was the key in round (totalRounds-i), what would the final key in the rainbow table be?
@@ -101,12 +98,16 @@ public class Rainbow {
                 //match found! apply all rounds up to the previous key, to the originally generated key, to approach the solution from the front of the rainbow
                 String startingKey = rainbowTable.get(hypotheticalFinalKey); //this key is the one that originally generated the solution.
 
-                preimage = rainbowLeap(0, rounds - i - 1, startingKey);
-                return "SUCESS: Hash inverted, preimage = " + preimage + " with corresponding hash = " + hash(preimage);
+                String candidatePreimage = rainbowLeap(0, rounds - i - 1, startingKey);
+                String foundHash = hash(candidatePreimage);
+                if(foundHash.equals(soughtHash)) {
+                    return "SUCESS: Hash inverted, preimage = " + candidatePreimage + ", with corresponding hash(" + candidatePreimage +") = " + foundHash;
+                }
+                // else: False positive, try next. May be contained deeper back in the rainbow table.
             }
-            //if hypothesis key is not contained, try the next.
+            //else: hypothesis key is not contained, try the next.
         }
-        return preimage;
+        return "FAILURE: Preimage of " + soughtHash + " not found.";
     }
 
     //############################# Helper Functions #################################################################
@@ -129,21 +130,6 @@ public class Rainbow {
 
         }
         return key;
-    }
-
-    //Applies the last i rounds to the soughtKey in the correct order.
-    public String steppingBackwards(Integer i, String soughtKey) throws NoSuchAlgorithmException {
-
-        String resultingKey = soughtKey;
-
-        System.out.println("Stepping backwards to find " + soughtKey);
-
-        for (int j = rounds - i; j < rounds; j++) {
-            resultingKey = rainbowStep(j, resultingKey);
-            System.out.println("Round " + j + ": " + resultingKey);
-        }
-
-        return resultingKey;
     }
 
     public String reductionFunction(Integer round, String prevHash) {
