@@ -6,5 +6,5 @@ Presentation outline:
 1. Hash Tables -> Hash Chains -> Rainbow Tables
 2. Explain Rainbow table
 3. Work through example on paper
-4. Scaling properties/TMTO
+4. Scaling properties/TMTO/Use-case
 5. Defending with salt
