@@ -12,26 +12,26 @@ public class Rainbow {
     final static String outputFilePath = "~/Documents/infosec/bifroest/rainbowTable.txt";
     public final HashMap<String, List<String>> rainbowTable = new HashMap<String, List<String>>(); //central data structure
 
-    private final Integer keyLength = 4; // keyspace size = 16^keyLength = 2^4*keyLength =
-    private final Integer keySpacePow = 4*keyLength;
+    private final Integer plaintextLength = 4; // the plaintext space will be defined by this length
+    private final Integer plaintextSpacePow = 4* plaintextLength;
     private final Integer roundsPow = 4; // 2^4 = 16
-    private final Integer rounds = (int) Math.pow(2, roundsPow) ; // number of rows in the table ( = hash + reduction rounds + 1)
-    private final Integer rowsPow = keySpacePow -roundsPow +1; // roundsPow + rowsPow = keySpacePow + 1, "+1" for good measure, so that we surely cover most of the keyspace
-    public final Integer rows = (int) Math.pow(2, rowsPow); //number of starting keys generated for the table; ie. rows
+    private final Integer rounds = (int) Math.pow(2, roundsPow) ; // number of columns in the table ( = hash + reduction rounds + 1)
+    private final Integer rowsPow = plaintextSpacePow -roundsPow +1; // roundsPow + rowsPow = plaintextSpacePow + 1, "+1" for good measure, so that we surely cover most of the plaintextspace
+    public final Integer rows = (int) Math.pow(2, rowsPow); //number of starting plaintexts generated for the table; ie. rows
 
     public void generateTable() throws NoSuchAlgorithmException {
         for (int i = 0; i < rows; i++) {
-            String firstKey = leftPadZeros(Integer.toHexString(i), keyLength); //generate first key
+            String startingPlaintext = leftPadZeros(Integer.toHexString(i), plaintextLength); //generate first plaintext
 
-            //System.out.print("Row Nr." + i + ": start = " + firstKey);
-            String lastKey = firstKey;
+            //System.out.print("Row Nr." + i + ": start = " + startingPlaintext);
+            String endpoint = startingPlaintext;
             for (int j = 0; j < rounds; j++) {
-                lastKey = rainbowStep(j, lastKey); // Move one Step along the rainbow, to the next key.
-                //System.out.print(" ," + j + "=" + lastKey);
+                endpoint = rainbowStep(j, endpoint); // Move one Step along the rainbow, to the next plaintext.
+                //System.out.print(" ," + j + "=" + endpoint);
             }
-            putToMap(firstKey,lastKey); // put the fist and the last key together in the table.
+            putToMap(startingPlaintext,endpoint); // put the fist and the last plaintext together in the table.
             //System.out.println();
-            //System.out.println("Rainbow table entry Nr. " + i + ": " + firstKey + ", " + lastKey);
+            //System.out.println("Rainbow table entry Nr. " + i + ": " + startingPlaintext + ", " + endpoint);
         }
 
     }
@@ -44,81 +44,82 @@ public class Rainbow {
 
     }
 
-    public String searchTable(String soughtHash) throws NoSuchAlgorithmException {
+    // tries to find plaintext_x, the preimage of hash_of_x in the rainbow table
+    public String searchTable(String hash_of_x) throws NoSuchAlgorithmException {
 
         for (int i = 0; i <= rounds; i++) { //found the off-by-one error
-            String soughtKey = reductionFunction(rounds - (i+1), soughtHash); //ith Hypothesis key
-            // assuming this was the key in round (totalRounds-i), what would the final key in the rainbow table be?
-            String hypotheticalFinalKey = rainbowLeap(rounds - i, rounds, soughtKey);
+            String plaintext_x = reductionFunction(rounds - (i+1), hash_of_x); //ith Hypothesis plaintext
+            // assuming this was the plaintext in round (totalRounds-i), what would the final plaintext in the rainbow table be?
+            String hypotheticalEndpoint = rainbowLeap(rounds - i, rounds, plaintext_x);
 
-            //System.out.println("i = " + i + ", hypotheticalFinal key = " + hypotheticalFinalKey + ", soughtKey = " + soughtKey);
-            if (rainbowTable.containsKey(hypotheticalFinalKey)) { //Hypothesis key contained or not?
+            //System.out.println("i = " + i + ", hypotheticalFinal plaintext = " + hypotheticalEndpoint + ", plaintext_x = " + plaintext_x);
+            if (rainbowTable.containsKey(hypotheticalEndpoint)) { //Hypothesis Endpoint contained or not?
 
-                //match found! apply all rounds up to the previous key, to the originally generated key, to approach the solution from the front of the rainbow
-                List<String> startingKeys = rainbowTable.get(hypotheticalFinalKey); //this key is the one that originally generated the solution.
+                //match found! apply all rounds up to the previous plaintext, to the originally generated plaintext, to approach the solution from the front of the rainbow
+                List<String> startingPlaintexts = rainbowTable.get(hypotheticalEndpoint); //this plaintext is the one that originally generated the solution.
 
-                //try all keys in startingKeys.
-                for (String candidateStart:startingKeys) {
+                //try all plaintexts in startingPlaintexts.
+                for (String candidateStart:startingPlaintexts) {
 
 
                     String candidatePreimage = rainbowLeap(0, rounds - i - 1, candidateStart);
                     String foundHash = hash(candidatePreimage);
-                    if(foundHash.equals(soughtHash)) {
+                    if(foundHash.equals(hash_of_x)) {
                         return "SUCESS: Hash inverted, preimage = " + candidatePreimage + ", with corresponding hash(" + candidatePreimage +") = " + foundHash;
                     }
                 }
                 // else: False positive, try next. May be contained deeper back in the rainbow table.
             }
-            //else: hypothesis key is not contained, try the next.
+            //else: hypothesis plaintext is not contained, try the next.
         }
-        return "FAILURE: Preimage of " + soughtHash + " not found.";
+        return "FAILURE: Preimage of " + hash_of_x + " not found.";
     }
 
     //############################# Helper Functions #################################################################
     //############################# Helper Functions #################################################################
 
 
-    // add another newInitialKey to the List of all initial keys with final key = finalKey.
-    // or, if list empty, create new list, and add newInitalKey
-    public void putToMap (String newInitialKey, String finalKey) {
-        //get previously saved initial keys
-        List<String> initialKeys = rainbowTable.get(finalKey);
+    // add another newStartingPlaintext to the List of all initial plaintexts with final plaintext = endpoint.
+    // or, if list empty, create new list, and add newInitalPlaintext
+    public void putToMap (String newStartingPlaintext, String endpoint) {
+        //get previously saved initial plaintexts
+        List<String> startingPlaintexts = rainbowTable.get(endpoint);
 
         //if empty, create new empty list.
-        if(initialKeys==null) {
-            initialKeys = new LinkedList<String>();
-            rainbowTable.put(finalKey, initialKeys);
+        if(startingPlaintexts==null) {
+            startingPlaintexts = new LinkedList<String>();
+            rainbowTable.put(endpoint, startingPlaintexts);
         }
 
-        //add newInitialKey to list
-        initialKeys.add(newInitialKey);
+        //add newStartingPlaintext to list
+        startingPlaintexts.add(newStartingPlaintext);
     }
 
-    //Steps one step along the rainbow, generates the next key.
-    public String rainbowStep(Integer round, String prevKey) throws NoSuchAlgorithmException {
-        String prevKeyHash = hash(prevKey); //generate hash of previous key.
-        String newKey = reductionFunction(round, prevKeyHash); // apply reduction function and get next key.
-        return newKey;
+    //Steps one step along the rainbow, generates the next plaintext.
+    public String rainbowStep(Integer round, String prevPlaintext) throws NoSuchAlgorithmException {
+        String prevHash = hash(prevPlaintext); //generate hash of previous plaintext.
+        String newPlaintext = reductionFunction(round, prevHash); // apply reduction function and get next plaintext.
+        return newPlaintext;
     }
 
     //steps along the rainbow, applies round "begin" up to and including round "end"
-    public String rainbowLeap(Integer begin, Integer end, String inputKey) throws NoSuchAlgorithmException {
+    public String rainbowLeap(Integer begin, Integer end, String inputPlaintext) throws NoSuchAlgorithmException {
         //System.out.println("Leaping from line " + begin +" to " + end);
-        String key = inputKey;
+        String plaintext = inputPlaintext;
         for (int i = begin; i < end; i++) {
-            //apply all relevant rounds to the key successively
-            key = rainbowStep(i, key);
+            //apply all relevant rounds to the plaintext successively
+            plaintext = rainbowStep(i, plaintext);
 
         }
-        return key;
+        return plaintext;
     }
 
     public String reductionFunction(Integer round, String prevHash) {
-        String shortenedHash = prevHash.substring(0, keyLength); // take first few chars of hash
+        String shortenedHash = prevHash.substring(0, plaintextLength); // take first few chars of hash
         Integer sum = Integer.valueOf(shortenedHash, 16) + round; //turns Hex into Integer and adds round number
-        String newKey = Integer.toHexString(sum); //convert back to hex
-        newKey = newKey.substring(0, keyLength); //avoiding overflow errors. analogous to modulus 16^keyLength.
-        return newKey;
+        String newPlaintext = Integer.toHexString(sum); //convert back to hex
+        newPlaintext = newPlaintext.substring(0, plaintextLength); //avoiding overflow errors. analogous to modulus 16^plaintextLength.
+        return newPlaintext;
     }
 
     public String leftPadZeros(String string, Integer len) {

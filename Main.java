@@ -4,12 +4,12 @@ import java.security.NoSuchAlgorithmException;
 
 class Main {
     private static final Rainbow myRainbow = new Rainbow();
-    private static final String testKey = "1971";
-    private static String testHash;
+    private static final String plaintext_x = "1971";
+    private static String hash_of_x;
 
     static {
         try {
-            testHash = Rainbow.hash(testKey);
+            hash_of_x = Rainbow.hash(plaintext_x);
         } catch (NoSuchAlgorithmException e) {
             e.printStackTrace();
         }
@@ -20,10 +20,10 @@ class Main {
         try {
 
             myRainbow.generateTable();
-            System.out.println("searching table for: hash(" + testKey +") = " + testHash);
+            System.out.println("searching table for: hash(" + plaintext_x +") = " + hash_of_x);
             System.out.println(myRainbow.rainbowTable);
             System.out.println("Generating the table caused " + (myRainbow.rows -  myRainbow.rainbowTable.size()) + " collisions.");
-            System.out.println(myRainbow.searchTable(testHash));
+            System.out.println(myRainbow.searchTable(hash_of_x));
 
         }
         // For specifying wrong message digest algorithms
