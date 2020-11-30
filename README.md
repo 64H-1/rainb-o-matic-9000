@@ -1,6 +1,7 @@
 # rainb-o-matic-9000
 
-This is a toy rainbow table that you can experiment with.
+Welcome!
+We created this rainbow table so you can have a look at it and experiment with it!
 
 Fire it up and change plaintext_x in Main.java to see if it can crack your password!
 Alternatively you can input the hash directly with minor modifications.
