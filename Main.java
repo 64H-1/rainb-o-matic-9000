@@ -1,11 +1,12 @@
 import java.security.NoSuchAlgorithmException;
 
-// Java program to calculate SHA hash value
+// Java program that generates a small rainbow table
+// and then tries to invert a hash with it.
 
 class Main {
     private static final Rainbow myRainbow = new Rainbow();
-    private static final String plaintext_x = "1971";
-    private static String hash_of_x;
+    private static final String plaintext_x = "1971"; // Enter a 4 digit string to generate a hash.
+    private static String hash_of_x; // or enter the hash directly here.
 
     static {
         try {
@@ -26,6 +27,8 @@ class Main {
             System.out.println(myRainbow.searchTable(hash_of_x));
 
         }
+
+
         // For specifying wrong message digest algorithms
         catch (NoSuchAlgorithmException e) {
             System.out.println("Exception thrown for incorrect algorithm: " + e);
