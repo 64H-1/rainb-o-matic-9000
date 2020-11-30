@@ -10,7 +10,7 @@ public class Rainbow {
 
     /*** Change the path ***/
     final static String outputFilePath = "~/Documents/infosec/bifroest/rainbowTable.txt";
-    public final HashMap<String, List<String>> rainbowTable = new HashMap<String, List<String>>(); //central data structure
+    public final HashMap<String, List<String>> rainbowStorage = new HashMap<String, List<String>>(); //central data structure
 
     private final Integer plaintextLength = 4; // the plaintext space will be defined by this length
     private final Integer plaintextSpacePow = 4* plaintextLength;
@@ -53,10 +53,10 @@ public class Rainbow {
             String hypotheticalEndpoint = rainbowLeap(rounds - i, rounds, plaintext_x);
 
             //System.out.println("i = " + i + ", hypotheticalFinal plaintext = " + hypotheticalEndpoint + ", plaintext_x = " + plaintext_x);
-            if (rainbowTable.containsKey(hypotheticalEndpoint)) { //Hypothesis Endpoint contained or not?
+            if (rainbowStorage.containsKey(hypotheticalEndpoint)) { //Hypothesis Endpoint contained or not?
 
                 //match found! apply all rounds up to the previous plaintext, to the originally generated plaintext, to approach the solution from the front of the rainbow
-                List<String> startingPlaintexts = rainbowTable.get(hypotheticalEndpoint); //this plaintext is the one that originally generated the solution.
+                List<String> startingPlaintexts = rainbowStorage.get(hypotheticalEndpoint); //this plaintext is the one that originally generated the solution.
 
                 //try all plaintexts in startingPlaintexts.
                 for (String candidateStart:startingPlaintexts) {
@@ -83,12 +83,12 @@ public class Rainbow {
     // or, if list empty, create new list, and add newInitalPlaintext
     public void putToMap (String newStartingPlaintext, String endpoint) {
         //get previously saved initial plaintexts
-        List<String> startingPlaintexts = rainbowTable.get(endpoint);
+        List<String> startingPlaintexts = rainbowStorage.get(endpoint);
 
         //if empty, create new empty list.
         if(startingPlaintexts==null) {
             startingPlaintexts = new LinkedList<String>();
-            rainbowTable.put(endpoint, startingPlaintexts);
+            rainbowStorage.put(endpoint, startingPlaintexts);
         }
 
         //add newStartingPlaintext to list

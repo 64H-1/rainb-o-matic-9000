@@ -21,8 +21,8 @@ class Main {
 
             myRainbow.generateTable();
             System.out.println("searching table for: hash(" + plaintext_x +") = " + hash_of_x);
-            System.out.println(myRainbow.rainbowTable);
-            System.out.println("Generating the table caused " + (myRainbow.rows -  myRainbow.rainbowTable.size()) + " collisions.");
+            System.out.println(myRainbow.rainbowStorage);
+            System.out.println("Generating the table caused " + (myRainbow.rows -  myRainbow.rainbowStorage.size()) + " collisions.");
             System.out.println(myRainbow.searchTable(hash_of_x));
 
         }
