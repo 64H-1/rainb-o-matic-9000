@@ -18,7 +18,7 @@ and see what happens to the collisions.
 2. Implement a timing function and experiment with the number of rows and columns.
 What happens to the generating and lookup time? What happens to the likelyhood of success?
 
-3. If you want to crack longer plaintexts longer than 6 or so, you can implement a way to read in
+3. If you want to crack plaintexts longer than 6 or so, you can implement a way to read in
 a precomputed table, so that you can reuse it.
 
 4. See if you can adapt this program to work in a alphanumeric plaintext space.
