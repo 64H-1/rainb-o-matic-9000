@@ -8,16 +8,12 @@ import java.util.List;
 
 public class Rainbow {
 
-    /*** Change the path ***/
-    final static String outputFilePath = "~/Documents/infosec/bifroest/rainbowTable.txt";
-    public final HashMap<String, List<String>> rainbowStorage = new HashMap<String, List<String>>(); //central data structure
+    public final HashMap<String, List<String>> rainbowStorage = new HashMap<String, List<String>>();
+    //central data structure, stores the endpoint as a key, and the list of starting plaintexts that led to that endpoint
 
     private final Integer plaintextLength = 4; // the plaintext space will be defined by this length
-    private final Integer plaintextSpacePow = 4* plaintextLength;
-    private final Integer roundsPow = 4; // 2^4 = 16
-    private final Integer rounds = (int) Math.pow(2, roundsPow) ; // number of columns in the table ( = hash + reduction rounds + 1)
-    private final Integer rowsPow = plaintextSpacePow -roundsPow +1; // roundsPow + rowsPow = plaintextSpacePow + 1, "+1" for good measure, so that we surely cover most of the plaintextspace
-    public final Integer rows = (int) Math.pow(2, rowsPow); //number of starting plaintexts generated for the table; ie. rows
+    private final Integer columns = 16 ; // number of columns in the table ( = hash + reduction rounds + 1)
+    public final Integer rows = 8000; //number of starting plaintexts generated for the table; ie. rows
 
     public void generateTable() throws NoSuchAlgorithmException {
         for (int i = 0; i < rows; i++) {
@@ -25,7 +21,7 @@ public class Rainbow {
 
             //System.out.print("Row Nr." + i + ": start = " + startingPlaintext);
             String endpoint = startingPlaintext;
-            for (int j = 0; j < rounds; j++) {
+            for (int j = 0; j < columns; j++) {
                 endpoint = rainbowStep(j, endpoint); // Move one Step along the rainbow, to the next plaintext.
                 //System.out.print(" ," + j + "=" + endpoint);
             }
@@ -47,10 +43,10 @@ public class Rainbow {
     // tries to find plaintext_x, the preimage of hash_of_x in the rainbow table
     public String searchTable(String hash_of_x) throws NoSuchAlgorithmException {
 
-        for (int i = 0; i <= rounds; i++) { //found the off-by-one error
-            String plaintext_x = reductionFunction(rounds - (i+1), hash_of_x); //ith Hypothesis plaintext
+        for (int i = 0; i <= columns; i++) { //found the off-by-one error
+            String plaintext_x = reductionFunction(columns - (i+1), hash_of_x); //ith Hypothesis plaintext
             // assuming this was the plaintext in round (totalRounds-i), what would the final plaintext in the rainbow table be?
-            String hypotheticalEndpoint = rainbowLeap(rounds - i, rounds, plaintext_x);
+            String hypotheticalEndpoint = rainbowLeap(columns - i, columns, plaintext_x);
 
             //System.out.println("i = " + i + ", hypotheticalFinal plaintext = " + hypotheticalEndpoint + ", plaintext_x = " + plaintext_x);
             if (rainbowStorage.containsKey(hypotheticalEndpoint)) { //Hypothesis Endpoint contained or not?
@@ -62,7 +58,7 @@ public class Rainbow {
                 for (String candidateStart:startingPlaintexts) {
 
 
-                    String candidatePreimage = rainbowLeap(0, rounds - i - 1, candidateStart);
+                    String candidatePreimage = rainbowLeap(0, columns - i - 1, candidateStart);
                     String foundHash = hash(candidatePreimage);
                     if(foundHash.equals(hash_of_x)) {
                         return "SUCESS: Hash inverted, preimage = " + candidatePreimage + ", with corresponding hash(" + candidatePreimage +") = " + foundHash;
